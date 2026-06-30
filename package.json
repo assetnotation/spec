@@ -1,0 +1,31 @@
+{
+  "name": "asset-notation",
+  "version": "0.1.0",
+  "description": "An open, portable notation for what you own and owe - assets and liabilities - over time.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "homepage": "https://github.com/assetnotation/spec#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/assetnotation/spec.git"
+  },
+  "bugs": {
+    "url": "https://github.com/assetnotation/spec/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "validate": "node tests/validate.mjs",
+    "test": "node tests/validate.mjs",
+    "lint:md": "markdownlint-cli2 \"*.md\" \"versions/**/*.md\" \"proposals/**/*.md\" \".github/**/*.md\"",
+    "lint": "npm run lint:md",
+    "check": "npm run lint && npm run validate"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "markdownlint-cli2": "^0.18.1"
+  }
+}
