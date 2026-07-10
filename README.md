@@ -1,7 +1,7 @@
 # Asset Notation
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Spec version](https://img.shields.io/badge/spec-0.2.0--draft-orange.svg)](versions/0.2.0.md)
+[![Spec version](https://img.shields.io/badge/spec-0.3.0-blue.svg)](versions/0.3.0.md)
 [![CI](https://github.com/assetnotation/spec/actions/workflows/ci.yml/badge.svg)](https://github.com/assetnotation/spec/actions/workflows/ci.yml)
 
 **An open, portable notation for what you own and owe.**
@@ -12,8 +12,9 @@ across institutions and asset classes - in a single self-describing JSON documen
 any application can read and write. Net worth is something you *derive* from it; the
 format itself just records the facts.
 
-> **Status: DRAFT (v0.2.0).** The model is exercised against real data before any v1.0.
-> Expect breaking changes until then. Feedback and proposals are welcome.
+> **Status: v0.3.0 (pre-1.0).** The model is exercised against real data before any
+> v1.0. Expect occasional breaking changes until then. Feedback and proposals are
+> welcome.
 
 ## Why
 
@@ -32,7 +33,7 @@ unknown fields and kinds are preserved, never rejected.
 
 ```json
 {
-  "assetnotation": "0.1.0",
+  "assetnotation": "0.3.0",
   "generatedAt": "2026-06-24T20:00:00Z",
   "baseCurrency": "EUR",
   "holdings": [
@@ -46,11 +47,11 @@ unknown fields and kinds are preserved, never rejected.
 }
 ```
 
-- **Specification:** [`versions/0.2.0.md`](versions/0.2.0.md) - the normative document
-  (draft; [`versions/0.1.0.md`](versions/0.1.0.md) is the previous version).
-- **JSON Schema:** [`schema/0.2.0/asset-notation.schema.json`](schema/0.2.0/asset-notation.schema.json).
+- **Specification:** [`versions/0.3.0.md`](versions/0.3.0.md) - the normative document
+  (previous versions stay in [`versions/`](versions/)).
+- **JSON Schema:** [`schema/0.3.0/asset-notation.schema.json`](schema/0.3.0/asset-notation.schema.json).
 - **Examples:** [`examples/`](examples/) - a minimal document, a full household, a
-  multi-currency brokerage with a stock split.
+  multi-currency brokerage with paired trade legs and a stock split.
 
 ## Validate a document
 
@@ -64,8 +65,9 @@ npm run check       # both
 ```
 
 To validate your own document, drop it in `examples/` (or point your own ajv setup at
-`schema/0.2.0/asset-notation.schema.json`, JSON Schema draft 2020-12). Examples are
-validated against the schema matching the version each document declares.
+`schema/0.3.0/asset-notation.schema.json`, JSON Schema draft 2020-12). Examples are
+validated against the schema matching the version each document declares; on top of
+the schema, the validator flags duplicate ids and unresolved references.
 
 ## Repository layout
 

@@ -1,5 +1,5 @@
 {
-  "assetnotation": "0.1.0",
+  "assetnotation": "0.3.0",
   "generatedAt": "2026-06-24T20:00:00Z",
   "generator": { "name": "example", "version": "1.0.0" },
   "baseCurrency": "EUR",
@@ -7,7 +7,7 @@
     { "id": "s1", "type": "person", "name": "A. Doe", "country": "FR" }
   ],
   "institutions": [
-    { "id": "i1", "name": "Example Bank", "kind": "bank", "ids": { "bic": "EXAMPLEXXX" } },
+    { "id": "i1", "name": "Example Bank", "kind": "bank", "ids": { "bic": "EXAMFRPPXXX" } },
     { "id": "i2", "name": "Example Broker", "kind": "broker" }
   ],
   "holdings": [
@@ -26,8 +26,8 @@
     { "id": "v4", "holdingId": "h4", "asOf": "2026-06-24", "value": { "amount": "176400.00", "currency": "EUR" }, "source": "statement" }
   ],
   "ownership": [
-    { "subjectId": "s1", "holdingId": "h1", "share": 1 },
-    { "subjectId": "s1", "holdingId": "h3", "share": 1 },
-    { "subjectId": "s1", "holdingId": "h4", "share": 1 }
+    { "subjectId": "s1", "holdingId": "h1", "share": "1" },
+    { "subjectId": "s1", "holdingId": "h3", "share": "1" },
+    { "subjectId": "s1", "holdingId": "h4", "share": "1" }
   ]
 }
