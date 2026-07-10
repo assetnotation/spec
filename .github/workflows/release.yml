@@ -31,6 +31,8 @@ jobs:
         run: |
           sha="${{ inputs.sha }}"
           [ -z "$sha" ] && sha="${{ github.sha }}"
+          # Expand to a full commit sha: the release API rejects abbreviated ones.
+          sha=$(git rev-parse "${sha}^{commit}")
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
       - name: Extract the changelog section
         run: |
