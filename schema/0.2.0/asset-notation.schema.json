@@ -193,7 +193,7 @@
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "holdingId": { "$ref": "#/$defs/ref" },
-        "date": { "$ref": "#/$defs/date" },
+        "date": { "$ref": "#/$defs/dateOrTimestamp" },
         "amount": { "$ref": "#/$defs/money" },
         "type": {
           "type": "string",

@@ -22,7 +22,7 @@
     { "id": "v2", "holdingId": "h3", "asOf": "2026-07-08", "value": { "amount": "1840.00", "currency": "USD" }, "unitPrice": { "amount": "92.00", "currency": "USD" }, "source": "market", "fx": { "base": "EUR", "rate": "0.9210" } }
   ],
   "transactions": [
-    { "id": "t1", "holdingId": "h3", "date": "2026-03-02", "amount": { "amount": "-1792.00", "currency": "USD" }, "type": "trade", "description": "Buy 10 TECH at 179.20 USD", "instrumentId": "n1", "quantity": "10", "counterpartHoldingId": "h2", "fx": { "base": "EUR", "rate": "0.9208" } },
+    { "id": "t1", "holdingId": "h3", "date": "2026-03-02T15:30:00Z", "amount": { "amount": "-1792.00", "currency": "USD" }, "type": "trade", "description": "Buy 10 TECH at 179.20 USD", "instrumentId": "n1", "quantity": "10", "counterpartHoldingId": "h2", "fx": { "base": "EUR", "rate": "0.9208" } },
     { "id": "t2", "holdingId": "h3", "date": "2026-06-16", "type": "corporate_action", "factor": "2", "description": "2-for-1 stock split", "instrumentId": "n1" }
   ]
 }
