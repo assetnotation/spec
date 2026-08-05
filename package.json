@@ -21,7 +21,8 @@
     "test": "node tests/validate.mjs",
     "lint:md": "markdownlint-cli2 \"*.md\" \"versions/**/*.md\" \"proposals/**/*.md\" \".github/**/*.md\"",
     "lint": "npm run lint:md",
-    "check": "npm run lint && npm run validate"
+    "check": "npm run lint && npm run validate",
+    "gate": "npm run check"
   },
   "devDependencies": {
     "ajv": "^8.17.1",
