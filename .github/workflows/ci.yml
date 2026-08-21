@@ -12,6 +12,7 @@ jobs:
   check:
     name: Lint and validate
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # a hung job would otherwise bill until the 6h ceiling
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
