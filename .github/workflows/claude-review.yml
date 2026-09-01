@@ -31,6 +31,15 @@ concurrency:
   group: claude-review-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+# Default for every job in this file: CodeQL
+# actions/missing-workflow-permissions, raised on 2026-09-01 the minute this
+# workflow reached the default branch. An unstated permission is whatever the
+# account settings happen to grant on the day a job runs, not what the
+# workflow needs. The review job widens it deliberately; config only writes
+# one flag to GITHUB_OUTPUT and needs nothing.
+permissions:
+  contents: read
+
 jobs:
   config:
     name: Config
