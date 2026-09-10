@@ -24,3 +24,10 @@ jobs:
         run: npm run lint:md
       - name: Validate examples against the schema
         run: npm run validate
+
+      # Audited without --omit=dev: this repository declares no runtime
+      # dependencies at all, so an audit that skipped dev ones would look at
+      # nothing. The three dev packages are what validates the schema and the
+      # prose, and a compromised one of them ships a wrong specification.
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
