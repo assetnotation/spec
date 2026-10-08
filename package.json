@@ -19,7 +19,7 @@
   "scripts": {
     "validate": "node tests/validate.mjs",
     "test": "node tests/validate.mjs",
-    "lint:md": "markdownlint-cli2 \"*.md\" \"versions/**/*.md\" \"proposals/**/*.md\" \".github/**/*.md\"",
+    "lint:md": "node tests/lint-md.mjs",
     "lint": "npm run lint:md",
     "check": "npm run lint && npm run validate",
     "gate": "npm run check"
@@ -27,9 +27,6 @@
   "devDependencies": {
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "markdownlint-cli2": "^0.23.3"
-  },
-  "overrides": {
-    "smol-toml": "1.7.1"
+    "markdownlint": "^0.41.1"
   }
 }
