@@ -3,8 +3,9 @@
 // the document-level invariants a JSON Schema cannot express: an id duplicated within
 // its collection is an error; an unresolved reference is reported informatively but
 // permitted, because any subset of a valid document is itself valid (partial
-// disclosure). Used as the CI gate and as a local proof that the schemas, the examples
-// and the integrity rules agree.
+// disclosure). Then runs the conformance corpus in tests/conformance/, where each
+// case states the verdict it must get. Used as the CI gate and as a local proof that
+// the schemas, the examples, the corpus and the integrity rules agree.
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -64,34 +65,81 @@ function checkIntegrity(doc) {
   return { errors, notes };
 }
 
+// Validates one document: the schema of its declared major.minor, then the integrity
+// invariants. `entry` is undefined when no schema matches the declared version.
+function validateDocument(doc) {
+  const majorMinor = String(doc?.assetnotation ?? "").split(".").slice(0, 2).join(".");
+  const entry = validators.get(majorMinor);
+  if (!entry) return { entry, schemaErrors: [], errors: [], notes: [] };
+  const schemaOk = entry.validate(doc);
+  const schemaErrors = schemaOk ? [] : [...entry.validate.errors];
+  return { entry, schemaErrors, ...checkIntegrity(doc) };
+}
+
 const examplesDir = join(root, "examples");
 const files = readdirSync(examplesDir).filter((f) => f.endsWith(".json")).sort();
 
 let failures = 0;
 for (const file of files) {
   const doc = JSON.parse(readFileSync(join(examplesDir, file), "utf8"));
-  const majorMinor = String(doc.assetnotation ?? "").split(".").slice(0, 2).join(".");
-  const entry = validators.get(majorMinor);
+  const { entry, schemaErrors, errors, notes } = validateDocument(doc);
   if (!entry) {
     failures += 1;
     console.error(`FAIL  ${file}`);
     console.error(`      no schema for declared version "${doc.assetnotation}"`);
     continue;
   }
-  const schemaOk = entry.validate(doc);
-  const { errors, notes } = checkIntegrity(doc);
-  if (schemaOk && errors.length === 0) {
+  if (schemaErrors.length === 0 && errors.length === 0) {
     console.log(`PASS  ${file} (Asset Notation ${entry.version})`);
   } else {
     failures += 1;
     console.error(`FAIL  ${file} (Asset Notation ${entry.version})`);
-    for (const err of entry.validate.errors ?? []) {
-      console.error(`      ${err.instancePath || "/"} ${err.message}`);
-    }
+    for (const err of schemaErrors) console.error(`      ${err.instancePath || "/"} ${err.message}`);
     for (const err of errors) console.error(`      ${err}`);
   }
   for (const note of notes) console.log(`note  ${file}: ${note}`);
 }
+console.log(`
+${files.length - failures}/${files.length} example(s) valid.`);
 
-console.log(`\n${files.length - failures}/${files.length} example(s) valid.`);
-if (failures > 0) process.exit(1);
+// Conformance cases: each one carries the verdict a conformant validator must
+// reach. An invalid case must fail for its stated reason - an error at its
+// `expect` path, or a duplicate id - so a case that breaks for an unrelated
+// reason (a typo in the case itself) cannot pass as proof.
+const conformanceDir = join(here, "conformance");
+let caseCount = 0;
+let caseFailures = 0;
+for (const file of readdirSync(conformanceDir).filter((f) => f.endsWith(".json")).sort()) {
+  const suite = JSON.parse(readFileSync(join(conformanceDir, file), "utf8"));
+  for (const c of suite.cases) {
+    caseCount += 1;
+    const label = `${file} ${c.valid ? "valid" : "invalid"}: ${c.name} (section ${c.section})`;
+    const { entry, schemaErrors, errors } = validateDocument(c.document);
+    let problem = null;
+    if (!entry || entry.version !== suite.version) {
+      problem = `declares "${c.document?.assetnotation}", suite is ${suite.version}`;
+    } else if (c.valid) {
+      const found = [...schemaErrors.map((e) => `${e.instancePath || "/"} ${e.message}`), ...errors];
+      if (found.length > 0) problem = `rejected: ${found.join("; ")}`;
+    } else if (c.expect === "duplicate-id") {
+      if (!errors.some((e) => e.startsWith("duplicate id"))) problem = "accepted without a duplicate-id error";
+    } else if (!schemaErrors.some((e) => e.instancePath === c.expect)) {
+      const at = schemaErrors.map((e) => e.instancePath || "/").join(", ") || "nowhere";
+      problem = `expected an error at "${c.expect || "/"}", got one at ${at}`;
+    }
+    if (problem) {
+      caseFailures += 1;
+      console.error(`FAIL  ${label}`);
+      console.error(`      ${problem}`);
+    }
+  }
+}
+// Below this, the walk has gone wrong and a green result would mean nothing.
+const MIN_CASES = 40;
+if (caseCount < MIN_CASES) {
+  caseFailures += 1;
+  console.error(`FAIL  only ${caseCount} conformance case(s) found, expected at least ${MIN_CASES}`);
+}
+console.log(`${caseCount - caseFailures}/${caseCount} conformance case(s) reach their verdict.`);
+
+if (failures > 0 || caseFailures > 0) process.exit(1);

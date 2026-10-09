@@ -69,13 +69,27 @@ To validate your own document, drop it in `examples/` (or point your own ajv set
 validated against the schema matching the version each document declares; on top of
 the schema, the validator flags duplicate ids and unresolved references.
 
+## Test an implementation
+
+[`tests/conformance/0.3.0.json`](tests/conformance/0.3.0.json) is a language-neutral
+corpus for anyone writing a parser or validator: 45 whole documents, each with the
+verdict a conformant validator must reach and the section of the specification that
+decides it. The valid ones exercise what a consumer must tolerate (unknown kinds and
+fields, dangling references under partial disclosure, a corporate action with no
+amount, masked account numbers); the invalid ones what it must refuse (a float or a
+formatted amount, a lower-case currency, an extra key in a money object, a share above
+one, a duplicate id). Each invalid case names, in `expect`, the JSON Pointer where the
+error belongs, so it cannot pass by failing for an unrelated reason. Load the file,
+validate each `document`, compare with `valid`. `npm run validate` runs it against
+the reference schema.
+
 ## Repository layout
 
 ```text
 versions/    the specification, one Markdown source per version
 schema/      the JSON Schema, one folder per version
 examples/    conformant example documents (validated in CI)
-tests/       the example validator (CI gate)
+tests/       the example validator and the conformance corpus (CI gate)
 proposals/   how to propose a change to the format
 ```
 
