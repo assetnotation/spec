@@ -34,15 +34,23 @@ jobs:
           [ -z "$sha" ] && sha="${{ github.sha }}"
           # Expand to a full commit sha: the release API rejects abbreviated ones.
           sha=$(git rev-parse "${sha}^{commit}")
+          # Only a commit already on main is released: a tag on a feature
+          # branch would publish a contract nobody merged.
+          if ! git merge-base --is-ancestor "$sha" origin/main; then
+            echo "Commit $sha is not on main." >&2
+            exit 1
+          fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
       - name: Extract the changelog section
         run: |
           version="${{ inputs.version }}"
-          awk -v v="$version" '
+          # The notes come from the commit being tagged, not from the checkout:
+          # the two differ whenever a sha is given.
+          git show "${{ steps.target.outputs.sha }}:CHANGELOG.md" | awk -v v="$version" '
             $0 ~ ("^## \\[" v "\\]") { grab = 1; next }
             grab && /^## \[/ { exit }
             grab { print }
-          ' CHANGELOG.md > RELEASE_NOTES.md
+          ' > RELEASE_NOTES.md
           if [ ! -s RELEASE_NOTES.md ]; then
             echo "No changelog section for [$version]." >&2
             exit 1
