@@ -5,6 +5,15 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the pr
 adheres to [Semantic Versioning](https://semver.org/) (with the pre-1.0 caveat that
 minor versions may introduce breaking changes).
 
+## [Unreleased]
+
+### Fixed
+
+- The household example (in `examples/household.json` and section 16 of
+  `versions/0.3.0.md`) gives the brokerage account `h2` its ownership row. With
+  `ownership` present and no row for `h2`, the derivation of section 6 owns it at
+  zero, which contradicted the net worth the example announces (132730.55 EUR).
+
 ## [0.3.0] - 2026-07-10
 
 Version 0.3.0 ([`versions/0.3.0.md`](versions/0.3.0.md)), the coherence release: one
