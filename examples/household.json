@@ -27,6 +27,7 @@
   ],
   "ownership": [
     { "subjectId": "s1", "holdingId": "h1", "share": "1" },
+    { "subjectId": "s1", "holdingId": "h2", "share": "1" },
     { "subjectId": "s1", "holdingId": "h3", "share": "1" },
     { "subjectId": "s1", "holdingId": "h4", "share": "1" }
   ]
