@@ -5,6 +5,22 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the pr
 adheres to [Semantic Versioning](https://semver.org/) (with the pre-1.0 caveat that
 minor versions may introduce breaking changes).
 
+## [Unreleased]
+
+Version 0.5.0 ([`versions/0.5.0.md`](versions/0.5.0.md)): one rule tightened.
+Proposal 0005 in [`proposals/`](proposals/).
+
+### Changed
+
+- Section 5.3 and 4: a valuation of a liability MUST be zero or more, the outstanding
+  as the lender states it. 0.4.0 forbade the negation but left "typically positive"
+  open, and a debt valued `-90000` raised the derived net worth by 90000. The
+  reference validator reports a negative liability value as an error. A document
+  that valued a debt below zero no longer validates.
+- Conformance corpus `tests/conformance/0.5.0.json`: the 0.4.0 cases plus a
+  liability at its outstanding, at zero, below zero, an overdraft on an asset
+  account, and a negative value whose holding is absent.
+
 ## [0.4.0] - 2026-10-19
 
 Version 0.4.0 ([`versions/0.4.0.md`](versions/0.4.0.md)): additive, and states what
