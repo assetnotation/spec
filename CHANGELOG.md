@@ -5,6 +5,46 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the pr
 adheres to [Semantic Versioning](https://semver.org/) (with the pre-1.0 caveat that
 minor versions may introduce breaking changes).
 
+## [0.4.0] - 2026-10-19
+
+Version 0.4.0 ([`versions/0.4.0.md`](versions/0.4.0.md)): additive, and states what
+0.3.0 left unsaid. Proposals 0001 to 0004 in [`proposals/`](proposals/).
+
+### Added
+
+- `from` and `until` on ownership rows: the interval during which a share holds, so
+  a share that changes is history rather than a rewrite. Two rows of one subject on
+  one holding MUST NOT overlap; the reference validator reports an overlap as an
+  error.
+- Document integrity (section 4): a `parentId` chain MUST be acyclic; the reference
+  validator reports a cycle as an error.
+- Conformance corpus `tests/conformance/0.4.0.json`: the 0.3.0 cases plus ownership
+  intervals, overlaps, cycles, a liability child, a repayment on both legs.
+
+### Changed
+
+- Section 6, the derivation: each leaf holding is signed by its own `nature` (a
+  liability held inside an asset account is subtracted); a holding contributes
+  nothing before `openedAt` or on and after `closedAt`; ownership is read on the
+  root of the chain and as of the date.
+- Section 5.6: the sign of `amount` is the holding's own, in the direction of its
+  value (a repayment on a liability is negative); the legs of one `transferId` net
+  to zero once each is signed by its holding's nature.
+- Section 5.3 and 14: a producer SHOULD emit a final valuation when a holding closes.
+- The household example and section 16 carry a mortgage payment on both sides.
+
+### Fixed
+
+- The household example (in `examples/household.json` and section 16 of
+  `versions/0.3.0.md`) gives the brokerage account `h2` its ownership row. With
+  `ownership` present and no row for `h2`, the derivation of section 6 owns it at
+  zero, which contradicted the net worth the example announces (132730.55 EUR).
+- Schema: a calendar date must exist. `2026-99-99` matched the `YYYY-MM-DD`
+  pattern of `date` and of the date branch of `dateOrTimestamp` (`asOf`, a
+  transaction's `date`, `openedAt`, `closedAt`) and validated; the `date`
+  format now applies on top of the pattern, as the `date-time` format already
+  did for timestamps. No document carrying a real date changes validity.
+
 ## [0.3.0] - 2026-07-10
 
 Version 0.3.0 ([`versions/0.3.0.md`](versions/0.3.0.md)), the coherence release: one

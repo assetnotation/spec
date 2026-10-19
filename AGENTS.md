@@ -11,10 +11,10 @@ serves the document - it validates it, it never redefines it.
 
 ## The rule that is easiest to break here
 
-**This repo never names another product.** Not fidalo, not selfstore, not
-quitalo, not lacantabilite - in the spec, the examples, the tests, a commit
-message or a PR body. The whole `assetnotation` organisation is under this rule,
-strictly and without exception.
+**This repo never names another product.** No app, no library, no company - in
+the spec, the examples, the tests, a commit message or a PR body, and not even
+in this file to say which ones. The whole `assetnotation` organisation is under
+this rule, strictly and without exception.
 
 A notation that cites one vendor's app stops being a notation and becomes that
 vendor's export format. Examples use invented, neutral data.
@@ -41,8 +41,17 @@ does not validate its own examples is a spec that lies to its first reader.
   Florian Mousseau <florian.mousseau@gmail.com>. **No AI mention anywhere** - no
   co-author line, no trailer, no branding. `gh pr create` sometimes adds a
   generated-by trailer: re-read the body and remove it.
-- This repo is **public**. An agent prepares the pull request; the merge is
-  Florian's call.
+- This repo is **public**. An agent may merge its own pull request when its
+  checks are present AND green - a pull request with no checks at all (no
+  workflow run, Actions quota exhausted) is never green. Squash into
+  `develop`, merge commit into `main`, then back-merge `main` into `develop`
+  through a `backmerge/*` branch the same day.
+- **What waits for the maintainer is the content, not the repo.** A pull
+  request that touches `schema/`, `versions/`, `examples/` or a governance
+  document (`GOVERNANCE.md`, `MAINTAINERS.md`, `CODE_OF_CONDUCT.md`,
+  `SECURITY.md`, `CONTRIBUTING.md`, `LICENSE`, `NOTICE`) is prepared, left open
+  and pointed out - never merged by an agent. That is where the specification
+  is; a dependency bump or a CI fix is not.
 
 ## Versions
 

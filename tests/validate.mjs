@@ -3,8 +3,9 @@
 // the document-level invariants a JSON Schema cannot express: an id duplicated within
 // its collection is an error; an unresolved reference is reported informatively but
 // permitted, because any subset of a valid document is itself valid (partial
-// disclosure). Used as the CI gate and as a local proof that the schemas, the examples
-// and the integrity rules agree.
+// disclosure). Then runs the conformance corpus in tests/conformance/, where each
+// case states the verdict it must get. Used as the CI gate and as a local proof that
+// the schemas, the examples, the corpus and the integrity rules agree.
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -61,7 +62,64 @@ function checkIntegrity(doc) {
     ref("ownership", "subjectId", o.subjectId, "subjects");
     ref("ownership", "holdingId", o.holdingId, "holdings");
   }
+  errors.push(...parentCycles(doc), ...ownershipOverlaps(doc));
   return { errors, notes };
+}
+
+// A chain of parentId that comes back on itself (section 4): the derivation of
+// section 6 walks the chain, and a loop has no root. Reported once per member.
+function parentCycles(doc) {
+  const parentOf = new Map();
+  for (const h of doc.holdings ?? []) {
+    if (typeof h?.id === "string" && typeof h.parentId === "string") parentOf.set(h.id, h.parentId);
+  }
+  const errors = [];
+  for (const start of parentOf.keys()) {
+    const chain = [start];
+    for (let next = parentOf.get(start); next !== undefined; next = parentOf.get(next)) {
+      if (next === start) {
+        errors.push(`parent cycle: ${chain.join(" -> ")} -> ${start}`);
+        break;
+      }
+      if (chain.includes(next)) break; // the loop is elsewhere, reported from its own start
+      chain.push(next);
+    }
+  }
+  return errors;
+}
+
+// Two ownership rows of one subject on one holding whose intervals overlap
+// (section 5.7). A bare date compares as text: YYYY-MM-DD sorts as it dates.
+function ownershipOverlaps(doc) {
+  const rows = new Map();
+  for (const o of doc.ownership ?? []) {
+    if (typeof o?.subjectId !== "string" || typeof o.holdingId !== "string") continue;
+    const key = `${o.subjectId}\u0000${o.holdingId}`;
+    rows.set(key, [...(rows.get(key) ?? []), o]);
+  }
+  const errors = [];
+  for (const [, list] of rows) {
+    const sorted = list.slice().sort((a, b) => String(a.from ?? "").localeCompare(String(b.from ?? "")));
+    for (let i = 1; i < sorted.length; i++) {
+      const previous = sorted[i - 1];
+      const current = sorted[i];
+      if (previous.until === undefined || String(current.from ?? "") < String(previous.until)) {
+        errors.push(`ownership of holding "${current.holdingId}" by "${current.subjectId}" overlaps: [${previous.from ?? ""}, ${previous.until ?? ""}) and [${current.from ?? ""}, ${current.until ?? ""})`);
+      }
+    }
+  }
+  return errors;
+}
+
+// Validates one document: the schema of its declared major.minor, then the integrity
+// invariants. `entry` is undefined when no schema matches the declared version.
+function validateDocument(doc) {
+  const majorMinor = String(doc?.assetnotation ?? "").split(".").slice(0, 2).join(".");
+  const entry = validators.get(majorMinor);
+  if (!entry) return { entry, schemaErrors: [], errors: [], notes: [] };
+  const schemaOk = entry.validate(doc);
+  const schemaErrors = schemaOk ? [] : [...entry.validate.errors];
+  return { entry, schemaErrors, ...checkIntegrity(doc) };
 }
 
 const examplesDir = join(root, "examples");
@@ -70,28 +128,67 @@ const files = readdirSync(examplesDir).filter((f) => f.endsWith(".json")).sort()
 let failures = 0;
 for (const file of files) {
   const doc = JSON.parse(readFileSync(join(examplesDir, file), "utf8"));
-  const majorMinor = String(doc.assetnotation ?? "").split(".").slice(0, 2).join(".");
-  const entry = validators.get(majorMinor);
+  const { entry, schemaErrors, errors, notes } = validateDocument(doc);
   if (!entry) {
     failures += 1;
     console.error(`FAIL  ${file}`);
     console.error(`      no schema for declared version "${doc.assetnotation}"`);
     continue;
   }
-  const schemaOk = entry.validate(doc);
-  const { errors, notes } = checkIntegrity(doc);
-  if (schemaOk && errors.length === 0) {
+  if (schemaErrors.length === 0 && errors.length === 0) {
     console.log(`PASS  ${file} (Asset Notation ${entry.version})`);
   } else {
     failures += 1;
     console.error(`FAIL  ${file} (Asset Notation ${entry.version})`);
-    for (const err of entry.validate.errors ?? []) {
-      console.error(`      ${err.instancePath || "/"} ${err.message}`);
-    }
+    for (const err of schemaErrors) console.error(`      ${err.instancePath || "/"} ${err.message}`);
     for (const err of errors) console.error(`      ${err}`);
   }
   for (const note of notes) console.log(`note  ${file}: ${note}`);
 }
+console.log(`
+${files.length - failures}/${files.length} example(s) valid.`);
 
-console.log(`\n${files.length - failures}/${files.length} example(s) valid.`);
-if (failures > 0) process.exit(1);
+// Conformance cases: each one carries the verdict a conformant validator must
+// reach. An invalid case must fail for its stated reason - an error at its
+// `expect` path, or a duplicate id - so a case that breaks for an unrelated
+// reason (a typo in the case itself) cannot pass as proof.
+// The document-level invariants a case may expect, and the prefix of the error
+// each one raises.
+const INVARIANTS = { "duplicate-id": "duplicate id", "parent-cycle": "parent cycle", "ownership-overlap": "ownership of holding" };
+const conformanceDir = join(here, "conformance");
+let caseCount = 0;
+let caseFailures = 0;
+for (const file of readdirSync(conformanceDir).filter((f) => f.endsWith(".json")).sort()) {
+  const suite = JSON.parse(readFileSync(join(conformanceDir, file), "utf8"));
+  for (const c of suite.cases) {
+    caseCount += 1;
+    const label = `${file} ${c.valid ? "valid" : "invalid"}: ${c.name} (section ${c.section})`;
+    const { entry, schemaErrors, errors } = validateDocument(c.document);
+    let problem = null;
+    if (!entry || entry.version !== suite.version) {
+      problem = `declares "${c.document?.assetnotation}", suite is ${suite.version}`;
+    } else if (c.valid) {
+      const found = [...schemaErrors.map((e) => `${e.instancePath || "/"} ${e.message}`), ...errors];
+      if (found.length > 0) problem = `rejected: ${found.join("; ")}`;
+    } else if (c.expect in INVARIANTS) {
+      if (!errors.some((e) => e.startsWith(INVARIANTS[c.expect]))) problem = `accepted without a ${c.expect} error`;
+    } else if (!schemaErrors.some((e) => e.instancePath === c.expect)) {
+      const at = schemaErrors.map((e) => e.instancePath || "/").join(", ") || "nowhere";
+      problem = `expected an error at "${c.expect || "/"}", got one at ${at}`;
+    }
+    if (problem) {
+      caseFailures += 1;
+      console.error(`FAIL  ${label}`);
+      console.error(`      ${problem}`);
+    }
+  }
+}
+// Below this, the walk has gone wrong and a green result would mean nothing.
+const MIN_CASES = 40;
+if (caseCount < MIN_CASES) {
+  caseFailures += 1;
+  console.error(`FAIL  only ${caseCount} conformance case(s) found, expected at least ${MIN_CASES}`);
+}
+console.log(`${caseCount - caseFailures}/${caseCount} conformance case(s) reach their verdict.`);
+
+if (failures > 0 || caseFailures > 0) process.exit(1);
