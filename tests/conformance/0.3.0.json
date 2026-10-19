@@ -1084,6 +1084,54 @@
           }
         ]
       }
+    },
+    {
+      "name": "calendar date that does not exist",
+      "section": "3",
+      "valid": false,
+      "expect": "/valuations/0/asOf",
+      "document": {
+        "assetnotation": "0.3.0",
+        "generatedAt": "2026-07-08T09:00:00Z",
+        "holdings": [
+          {
+            "id": "h1",
+            "kind": "checking",
+            "nature": "asset",
+            "currency": "EUR"
+          }
+        ],
+        "valuations": [
+          {
+            "id": "v1",
+            "holdingId": "h1",
+            "asOf": "2026-02-30",
+            "value": {
+              "amount": "10.00",
+              "currency": "EUR"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "openedAt that does not exist",
+      "section": "3",
+      "valid": false,
+      "expect": "/holdings/0/openedAt",
+      "document": {
+        "assetnotation": "0.3.0",
+        "generatedAt": "2026-07-08T09:00:00Z",
+        "holdings": [
+          {
+            "id": "h1",
+            "kind": "checking",
+            "nature": "asset",
+            "currency": "EUR",
+            "openedAt": "2026-99-99"
+          }
+        ]
+      }
     }
   ]
 }
