@@ -62,7 +62,53 @@ function checkIntegrity(doc) {
     ref("ownership", "subjectId", o.subjectId, "subjects");
     ref("ownership", "holdingId", o.holdingId, "holdings");
   }
+  errors.push(...parentCycles(doc), ...ownershipOverlaps(doc));
   return { errors, notes };
+}
+
+// A chain of parentId that comes back on itself (section 4): the derivation of
+// section 6 walks the chain, and a loop has no root. Reported once per member.
+function parentCycles(doc) {
+  const parentOf = new Map();
+  for (const h of doc.holdings ?? []) {
+    if (typeof h?.id === "string" && typeof h.parentId === "string") parentOf.set(h.id, h.parentId);
+  }
+  const errors = [];
+  for (const start of parentOf.keys()) {
+    const chain = [start];
+    for (let next = parentOf.get(start); next !== undefined; next = parentOf.get(next)) {
+      if (next === start) {
+        errors.push(`parent cycle: ${chain.join(" -> ")} -> ${start}`);
+        break;
+      }
+      if (chain.includes(next)) break; // the loop is elsewhere, reported from its own start
+      chain.push(next);
+    }
+  }
+  return errors;
+}
+
+// Two ownership rows of one subject on one holding whose intervals overlap
+// (section 5.7). A bare date compares as text: YYYY-MM-DD sorts as it dates.
+function ownershipOverlaps(doc) {
+  const rows = new Map();
+  for (const o of doc.ownership ?? []) {
+    if (typeof o?.subjectId !== "string" || typeof o.holdingId !== "string") continue;
+    const key = `${o.subjectId}\u0000${o.holdingId}`;
+    rows.set(key, [...(rows.get(key) ?? []), o]);
+  }
+  const errors = [];
+  for (const [, list] of rows) {
+    const sorted = list.slice().sort((a, b) => String(a.from ?? "").localeCompare(String(b.from ?? "")));
+    for (let i = 1; i < sorted.length; i++) {
+      const previous = sorted[i - 1];
+      const current = sorted[i];
+      if (previous.until === undefined || String(current.from ?? "") < String(previous.until)) {
+        errors.push(`ownership of holding "${current.holdingId}" by "${current.subjectId}" overlaps: [${previous.from ?? ""}, ${previous.until ?? ""}) and [${current.from ?? ""}, ${current.until ?? ""})`);
+      }
+    }
+  }
+  return errors;
 }
 
 // Validates one document: the schema of its declared major.minor, then the integrity
@@ -106,6 +152,9 @@ ${files.length - failures}/${files.length} example(s) valid.`);
 // reach. An invalid case must fail for its stated reason - an error at its
 // `expect` path, or a duplicate id - so a case that breaks for an unrelated
 // reason (a typo in the case itself) cannot pass as proof.
+// The document-level invariants a case may expect, and the prefix of the error
+// each one raises.
+const INVARIANTS = { "duplicate-id": "duplicate id", "parent-cycle": "parent cycle", "ownership-overlap": "ownership of holding" };
 const conformanceDir = join(here, "conformance");
 let caseCount = 0;
 let caseFailures = 0;
@@ -121,8 +170,8 @@ for (const file of readdirSync(conformanceDir).filter((f) => f.endsWith(".json")
     } else if (c.valid) {
       const found = [...schemaErrors.map((e) => `${e.instancePath || "/"} ${e.message}`), ...errors];
       if (found.length > 0) problem = `rejected: ${found.join("; ")}`;
-    } else if (c.expect === "duplicate-id") {
-      if (!errors.some((e) => e.startsWith("duplicate id"))) problem = "accepted without a duplicate-id error";
+    } else if (c.expect in INVARIANTS) {
+      if (!errors.some((e) => e.startsWith(INVARIANTS[c.expect]))) problem = `accepted without a ${c.expect} error`;
     } else if (!schemaErrors.some((e) => e.instancePath === c.expect)) {
       const at = schemaErrors.map((e) => e.instancePath || "/").join(", ") || "nowhere";
       problem = `expected an error at "${c.expect || "/"}", got one at ${at}`;

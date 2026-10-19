@@ -1,6 +1,6 @@
 # 0001 - Ownership over time
 
-- Status: draft
+- Status: implemented (0.4.0)
 - Author: Florian Mousseau
 - Created: 2026-10-19
 - Target version: 0.4.0
