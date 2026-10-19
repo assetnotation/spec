@@ -1,6 +1,6 @@
 # 0003 - The sign of a transaction on a liability
 
-- Status: draft
+- Status: implemented (0.4.0)
 - Author: Florian Mousseau
 - Created: 2026-10-19
 - Target version: 0.4.0 (clarification; could ship as 0.3.1)

@@ -1,6 +1,6 @@
 # 0002 - A closed holding stops counting
 
-- Status: draft
+- Status: implemented (0.4.0)
 - Author: Florian Mousseau
 - Created: 2026-10-19
 - Target version: 0.4.0 (clarification; could ship as 0.3.1)
