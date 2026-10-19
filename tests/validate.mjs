@@ -113,13 +113,14 @@ function ownershipOverlaps(doc) {
 
 // A liability valued below zero (section 5.3, since 0.5.0): the derivation subtracts
 // a liability, so a negative outstanding would count the debt as an asset. A
-// valuation whose holding is absent is not checked: its nature is unknown.
+// valuation whose holding is absent is not checked: its nature is unknown. A signed
+// zero ("-0.00") is zero, not below it.
 function negativeLiabilities(doc) {
   const [major, minor] = String(doc?.assetnotation ?? "").split(".").map(Number);
   if (major === 0 && minor < 5) return [];
   const liabilities = new Set((doc.holdings ?? []).filter((h) => h?.nature === "liability").map((h) => h.id));
   return (doc.valuations ?? [])
-    .filter((v) => liabilities.has(v?.holdingId) && String(v.value?.amount ?? "").trim().startsWith("-"))
+    .filter((v) => liabilities.has(v?.holdingId) && /^-0*\.?0*[1-9]/.test(String(v.value?.amount ?? "").trim()))
     .map((v) => `negative liability value: valuation "${v.id}" of holding "${v.holdingId}" is ${v.value.amount}`);
 }
 

@@ -18,8 +18,8 @@ Proposal 0005 in [`proposals/`](proposals/).
   reference validator reports a negative liability value as an error. A document
   that valued a debt below zero no longer validates.
 - Conformance corpus `tests/conformance/0.5.0.json`: the 0.4.0 cases plus a
-  liability at its outstanding, at zero, below zero, an overdraft on an asset
-  account, and a negative value whose holding is absent.
+  liability at its outstanding, at zero, at a signed zero (`-0.00`), below zero,
+  an overdraft on an asset account, and a negative value whose holding is absent.
 
 ## [0.4.0] - 2026-10-19
 
