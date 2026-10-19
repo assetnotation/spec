@@ -14,6 +14,16 @@ minor versions may introduce breaking changes).
   `ownership` present and no row for `h2`, the derivation of section 6 owns it at
   zero, which contradicted the net worth the example announces (132730.55 EUR).
 
+## [Unreleased]
+
+### Fixed
+
+- Schema: a calendar date must exist. `2026-99-99` matched the `YYYY-MM-DD`
+  pattern of `date` and of the date branch of `dateOrTimestamp` (`asOf`, a
+  transaction's `date`, `openedAt`, `closedAt`) and validated; the `date`
+  format now applies on top of the pattern, as the `date-time` format already
+  did for timestamps. No document carrying a real date changes validity.
+
 ## [0.3.0] - 2026-07-10
 
 Version 0.3.0 ([`versions/0.3.0.md`](versions/0.3.0.md)), the coherence release: one
