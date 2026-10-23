@@ -26,8 +26,18 @@ for (const version of readdirSync(join(root, "schema")).sort()) {
   validators.set(majorMinor, { version, validate: ajv.compile(schema) });
 }
 
-// Document-level invariants (any version): unique ids, resolvable references.
-function checkIntegrity(doc) {
+// The invariants a later version added, and the major.minor that added each. A
+// document is judged by the rules of the version it declares: an archive valid
+// under 0.3.0 stays valid when a later release tightens what 0.4.0 or 0.5.0 mean.
+// Unique ids and resolvable references hold for every version.
+const SINCE = { parentCycles: "0.4", ownershipOverlaps: "0.4", negativeLiabilities: "0.5" };
+const atLeast = (majorMinor, floor) => {
+  const [a, b] = majorMinor.split(".").map(Number);
+  const [c, d] = floor.split(".").map(Number);
+  return a > c || (a === c && b >= d);
+};
+
+function checkIntegrity(doc, majorMinor) {
   const errors = [];
   const notes = [];
   const collections = ["subjects", "institutions", "holdings", "instruments", "valuations", "transactions"];
@@ -62,7 +72,10 @@ function checkIntegrity(doc) {
     ref("ownership", "subjectId", o.subjectId, "subjects");
     ref("ownership", "holdingId", o.holdingId, "holdings");
   }
-  errors.push(...parentCycles(doc), ...ownershipOverlaps(doc), ...negativeLiabilities(doc));
+  const versioned = { parentCycles, ownershipOverlaps, negativeLiabilities };
+  for (const [name, check] of Object.entries(versioned)) {
+    if (atLeast(majorMinor, SINCE[name])) errors.push(...check(doc));
+  }
   return { errors, notes };
 }
 
@@ -115,8 +128,6 @@ function ownershipOverlaps(doc) {
 // a liability, so a negative outstanding would count the debt as an asset. A
 // valuation whose holding is absent is not checked: its nature is unknown.
 function negativeLiabilities(doc) {
-  const [major, minor] = String(doc?.assetnotation ?? "").split(".").map(Number);
-  if (major === 0 && minor < 5) return [];
   const liabilities = new Set((doc.holdings ?? []).filter((h) => h?.nature === "liability").map((h) => h.id));
   return (doc.valuations ?? [])
     .filter((v) => liabilities.has(v?.holdingId) && String(v.value?.amount ?? "").trim().startsWith("-"))
@@ -131,7 +142,7 @@ function validateDocument(doc) {
   if (!entry) return { entry, schemaErrors: [], errors: [], notes: [] };
   const schemaOk = entry.validate(doc);
   const schemaErrors = schemaOk ? [] : [...entry.validate.errors];
-  return { entry, schemaErrors, ...checkIntegrity(doc) };
+  return { entry, schemaErrors, ...checkIntegrity(doc, majorMinor) };
 }
 
 const examplesDir = join(root, "examples");

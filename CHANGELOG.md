@@ -21,6 +21,15 @@ Proposal 0005 in [`proposals/`](proposals/).
   liability at its outstanding, at zero, below zero, an overdraft on an asset
   account, and a negative value whose holding is absent.
 
+### Fixed
+
+- Reference validator: each integrity invariant applies from the version that
+  introduced it - acyclic parent chains and non-overlapping ownership rows from
+  0.4.0, non-negative liability values from 0.5.0 - so a document keeps the
+  validity of the version it declares. A 0.3.0 document with a parent loop or
+  with overlapping `from`/`until` rows was rejected under rules 0.3.0 never
+  stated. Cases in `tests/conformance/0.3.0.json` and `0.4.0.json` hold it.
+
 ## [0.4.0] - 2026-10-19
 
 Version 0.4.0 ([`versions/0.4.0.md`](versions/0.4.0.md)): additive, and states what
