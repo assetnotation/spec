@@ -1,9 +1,14 @@
 # Weekly dependency PRs, grouped to keep the noise down: one PR for all
 # minor/patch bumps, majors stay individual (they need real review).
+# target-branch is not optional here: dependabot defaults to the repository's
+# default branch, which is main, while every change is integrated through
+# develop. Without it a bump merged on main skips develop, and only a release
+# branch is back-merged. Security updates ignore it and still target main.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
@@ -15,6 +20,7 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly
     groups:
