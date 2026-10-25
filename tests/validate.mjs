@@ -62,7 +62,7 @@ function checkIntegrity(doc) {
     ref("ownership", "subjectId", o.subjectId, "subjects");
     ref("ownership", "holdingId", o.holdingId, "holdings");
   }
-  errors.push(...parentCycles(doc), ...ownershipOverlaps(doc));
+  errors.push(...parentCycles(doc), ...ownershipOverlaps(doc), ...negativeLiabilities(doc));
   return { errors, notes };
 }
 
@@ -111,6 +111,18 @@ function ownershipOverlaps(doc) {
   return errors;
 }
 
+// A liability valued below zero (section 5.3, since 0.5.0): the derivation subtracts
+// a liability, so a negative outstanding would count the debt as an asset. A
+// valuation whose holding is absent is not checked: its nature is unknown.
+function negativeLiabilities(doc) {
+  const [major, minor] = String(doc?.assetnotation ?? "").split(".").map(Number);
+  if (major === 0 && minor < 5) return [];
+  const liabilities = new Set((doc.holdings ?? []).filter((h) => h?.nature === "liability").map((h) => h.id));
+  return (doc.valuations ?? [])
+    .filter((v) => liabilities.has(v?.holdingId) && String(v.value?.amount ?? "").trim().startsWith("-"))
+    .map((v) => `negative liability value: valuation "${v.id}" of holding "${v.holdingId}" is ${v.value.amount}`);
+}
+
 // Validates one document: the schema of its declared major.minor, then the integrity
 // invariants. `entry` is undefined when no schema matches the declared version.
 function validateDocument(doc) {
@@ -154,7 +166,7 @@ ${files.length - failures}/${files.length} example(s) valid.`);
 // reason (a typo in the case itself) cannot pass as proof.
 // The document-level invariants a case may expect, and the prefix of the error
 // each one raises.
-const INVARIANTS = { "duplicate-id": "duplicate id", "parent-cycle": "parent cycle", "ownership-overlap": "ownership of holding" };
+const INVARIANTS = { "duplicate-id": "duplicate id", "parent-cycle": "parent cycle", "ownership-overlap": "ownership of holding", "negative-liability": "negative liability value" };
 const conformanceDir = join(here, "conformance");
 let caseCount = 0;
 let caseFailures = 0;

@@ -5,6 +5,22 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the pr
 adheres to [Semantic Versioning](https://semver.org/) (with the pre-1.0 caveat that
 minor versions may introduce breaking changes).
 
+## [0.5.0] - 2026-10-25
+
+Version 0.5.0 ([`versions/0.5.0.md`](versions/0.5.0.md)): one rule tightened.
+Proposal 0005 in [`proposals/`](proposals/).
+
+### Changed
+
+- Section 5.3 and 4: a valuation of a liability MUST be zero or more, the outstanding
+  as the lender states it. 0.4.0 forbade the negation but left "typically positive"
+  open, and a debt valued `-90000` raised the derived net worth by 90000. The
+  reference validator reports a negative liability value as an error. A document
+  that valued a debt below zero no longer validates.
+- Conformance corpus `tests/conformance/0.5.0.json`: the 0.4.0 cases plus a
+  liability at its outstanding, at zero, below zero, an overdraft on an asset
+  account, and a negative value whose holding is absent.
+
 ## [0.4.0] - 2026-10-19
 
 Version 0.4.0 ([`versions/0.4.0.md`](versions/0.4.0.md)): additive, and states what
@@ -121,6 +137,8 @@ First public release of the Asset Notation specification.
 - Example documents in [`examples/`](examples/) and a validator used as a CI gate.
 - Project governance, contribution guide, code of conduct and security policy.
 
+[0.5.0]: https://github.com/assetnotation/spec/releases/tag/v0.5.0
+[0.4.0]: https://github.com/assetnotation/spec/releases/tag/v0.4.0
 [0.3.0]: https://github.com/assetnotation/spec/releases/tag/v0.3.0
 [0.2.0]: https://github.com/assetnotation/spec/releases/tag/v0.2.0
 [0.1.0]: https://github.com/assetnotation/spec/releases/tag/v0.1.0
