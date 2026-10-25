@@ -5,7 +5,10 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the pr
 adheres to [Semantic Versioning](https://semver.org/) (with the pre-1.0 caveat that
 minor versions may introduce breaking changes).
 
-## [Unreleased]
+## [0.5.1] - 2026-10-25
+
+A fix to the reference validator; the specification text, the schema and the
+examples are those of 0.5.0.
 
 ### Fixed
 
@@ -148,6 +151,7 @@ First public release of the Asset Notation specification.
 - Example documents in [`examples/`](examples/) and a validator used as a CI gate.
 - Project governance, contribution guide, code of conduct and security policy.
 
+[0.5.1]: https://github.com/assetnotation/spec/releases/tag/v0.5.1
 [0.5.0]: https://github.com/assetnotation/spec/releases/tag/v0.5.0
 [0.4.0]: https://github.com/assetnotation/spec/releases/tag/v0.4.0
 [0.3.0]: https://github.com/assetnotation/spec/releases/tag/v0.3.0
