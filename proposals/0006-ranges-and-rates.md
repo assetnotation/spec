@@ -44,9 +44,12 @@ conformant consumers that derive different ones.
    past statement) is converted at its captured `fx`. A worked example shows one USD
    balance valued in March and read in October under a moving rate, with both figures.
 4. Section 5.6 reads "internal" against the scope being computed: a consumer MAY
-   exclude a leg from external flows only when every leg sharing its `transferId` is in
-   that scope. A leg whose counterparts are absent counts as an external flow of the
-   scope. Section 11 says so in one sentence next to partial disclosure.
+   exclude a leg from external flows only when at least one other leg sharing its
+   `transferId` is in that scope and every leg sharing it is. A leg alone with its
+   `transferId` counts as an external flow of the scope. A received document cannot
+   prove that no leg was cut off, so the producer carries that half: section 11 says
+   that a producer extracting a subset MUST drop `transferId` from every leg whose
+   counterparts it does not keep, next to partial disclosure.
 
 ## Compatibility
 
