@@ -65,6 +65,15 @@ jobs:
             echo "Release v$version already exists; nothing to do."
             exit 0
           fi
+          # A tag left by a failed run is reused by `gh release create`, whatever
+          # --target says: it must name the commit resolved above, or the notes
+          # of one text would be published over another.
+          if tagged=$(git rev-parse -q --verify "refs/tags/v$version^{commit}"); then
+            if [ "$tagged" != "$sha" ]; then
+              echo "Tag v$version points at $tagged, not $sha; refusing to publish." >&2
+              exit 1
+            fi
+          fi
           gh release create "v$version" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$sha" \
