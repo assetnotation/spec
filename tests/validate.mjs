@@ -214,4 +214,40 @@ if (caseCount < MIN_CASES) {
 }
 console.log(`${caseCount - caseFailures}/${caseCount} conformance case(s) reach their verdict.`);
 
-if (failures > 0 || caseFailures > 0) process.exit(1);
+// Documents quoted in prose: a whole document a reader copies from the README or
+// a version text is held to the same schema as an example. A fragment (a single
+// transaction, no `assetnotation` field) is not a document and is skipped.
+const FENCE = /^```json\n([\s\S]*?)^```$/gm;
+const prose = ["README.md", ...readdirSync(join(root, "versions")).filter((f) => f.endsWith(".md")).sort().map((f) => join("versions", f))];
+let quoted = 0;
+let quotedFailures = 0;
+for (const file of prose) {
+  for (const [, body] of readFileSync(join(root, file), "utf8").matchAll(FENCE)) {
+    if (!/^\s*\{\s*"assetnotation"/.test(body)) continue;
+    quoted += 1;
+    let doc;
+    try {
+      doc = JSON.parse(body);
+    } catch (e) {
+      quotedFailures += 1;
+      console.error(`FAIL  ${file}: a quoted document is not JSON (${e.message})`);
+      continue;
+    }
+    const { entry, schemaErrors, errors } = validateDocument(doc);
+    const found = entry ? [...schemaErrors.map((e) => `${e.instancePath || "/"} ${e.message}`), ...errors] : [`no schema for "${doc.assetnotation}"`];
+    if (found.length > 0) {
+      quotedFailures += 1;
+      console.error(`FAIL  ${file}: quoted document ${doc.assetnotation}`);
+      for (const f of found) console.error(`      ${f}`);
+    }
+  }
+}
+// Below this, the fence pattern has stopped matching and a green line would mean nothing.
+const MIN_QUOTED = 10;
+if (quoted < MIN_QUOTED) {
+  quotedFailures += 1;
+  console.error(`FAIL  only ${quoted} document(s) quoted in prose found, expected at least ${MIN_QUOTED}`);
+}
+console.log(`${quoted - quotedFailures}/${quoted} document(s) quoted in prose valid.`);
+
+if (failures > 0 || caseFailures > 0 || quotedFailures > 0) process.exit(1);
