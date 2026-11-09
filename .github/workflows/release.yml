@@ -27,11 +27,18 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      # Every dispatched value reaches the shell through `env`, never through
+      # `${{ }}` inside a `run:` block: an expression is substituted into the
+      # script before bash reads it, so a quote and a semicolon would run.
       - name: Resolve target commit
         id: target
+        env:
+          INPUT_SHA: ${{ inputs.sha }}
+          VERSION: ${{ inputs.version }}
+          DEFAULT_SHA: ${{ github.sha }}
         run: |
-          sha="${{ inputs.sha }}"
-          [ -z "$sha" ] && sha="${{ github.sha }}"
+          sha="$INPUT_SHA"
+          [ -z "$sha" ] && sha="$DEFAULT_SHA"
           # Expand to a full commit sha: the release API rejects abbreviated ones.
           sha=$(git rev-parse "${sha}^{commit}")
           # Only a commit already on main is released: a tag on a feature
@@ -40,13 +47,23 @@ jobs:
             echo "Commit $sha is not on main." >&2
             exit 1
           fi
+          # The commit must declare the version it is tagged with: an older
+          # version keeps its changelog section on every later commit, and its
+          # tag would then point at a different contract.
+          declared=$(git show "$sha:package.json" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0, 'utf8')).version)")
+          if [ "$declared" != "$VERSION" ]; then
+            echo "Commit $sha declares $declared, not $VERSION." >&2
+            exit 1
+          fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
       - name: Extract the changelog section
+        env:
+          version: ${{ inputs.version }}
+          SHA: ${{ steps.target.outputs.sha }}
         run: |
-          version="${{ inputs.version }}"
           # The notes come from the commit being tagged, not from the checkout:
           # the two differ whenever a sha is given.
-          git show "${{ steps.target.outputs.sha }}:CHANGELOG.md" | awk -v v="$version" '
+          git show "$SHA:CHANGELOG.md" | awk -v v="$version" '
             $0 ~ ("^## \\[" v "\\]") { grab = 1; next }
             grab && /^## \[/ { exit }
             grab { print }
@@ -58,9 +75,9 @@ jobs:
       - name: Create the tag and the release
         env:
           GH_TOKEN: ${{ github.token }}
+          version: ${{ inputs.version }}
+          sha: ${{ steps.target.outputs.sha }}
         run: |
-          version="${{ inputs.version }}"
-          sha="${{ steps.target.outputs.sha }}"
           if gh release view "v$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release v$version already exists; nothing to do."
             exit 0
