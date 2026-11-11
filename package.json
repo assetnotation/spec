@@ -27,7 +27,7 @@
   "devDependencies": {
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "markdownlint": "^0.42.0"
+    "markdownlint": "^0.42.1"
   },
   "overrides": {
     "re2js": "2.8.8"
