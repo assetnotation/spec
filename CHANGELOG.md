@@ -7,6 +7,12 @@ minor versions may introduce breaking changes).
 
 ## [Unreleased]
 
+### Fixed
+
+- The reference validator no longer reads a liability valued at `"-0"` or
+  `"-0.00"` as negative: it is zero, which section 5.3 allows. Two conformance
+  cases hold it.
+
 ## [0.5.1] - 2026-10-25
 
 A fix to the reference validator; the specification text, the schema and the
