@@ -4,30 +4,30 @@
 [![Spec version](https://img.shields.io/badge/spec-0.5.0-blue.svg)](versions/0.5.0.md)
 [![CI](https://github.com/assetnotation/spec/actions/workflows/ci.yml/badge.svg)](https://github.com/assetnotation/spec/actions/workflows/ci.yml)
 
-**An open, portable notation for what you own and owe.**
+An open, portable notation for what you own and owe.
 
-Asset Notation is a neutral data format for a person's or household's **assets and
-liabilities over time** - accounts, positions, properties, debts and their values,
-across institutions and asset classes - in a single self-describing JSON document that
-any application can read and write. Net worth is something you *derive* from it; the
-format itself just records the facts.
+Asset Notation is a neutral data format for the assets and liabilities of a person or
+a household over time. It covers accounts, positions, properties, debts and their
+values, across institutions and asset classes. Everything fits in one self-describing
+JSON document that any application can read and write. The format records the facts,
+and net worth is derived from them.
 
-> **Status: v0.5.0 (pre-1.0).** The model is exercised against real data before any
-> v1.0. Expect occasional breaking changes until then. Feedback and proposals are
+> Status v0.5.0, before 1.0. The model is exercised against real data before any
+> v1.0, so expect occasional breaking changes until then. Feedback and proposals are
 > welcome.
 
 ## Why
 
-Today wealth data is locked inside each aggregator and each institution, with no neutral
-interchange format. Move banks, change apps, or simply want a long-term archive you
-control, and the picture falls apart. Asset Notation is the neutral payload: it does not
-replace bank-messaging standards (ISO 20022) or brokerage feeds - it consolidates their
-outputs into one portable document the owner controls.
+Today wealth data is locked inside each aggregator and each institution, and no neutral
+format moves it between them. Move banks, change apps, or simply want a long-term
+archive you control, and the picture falls apart. Asset Notation keeps bank-messaging
+standards (ISO 20022) and brokerage feeds in place. It consolidates their outputs into
+one portable document the owner controls.
 
-Design in one breath: **one generic entity** (a `Holding`, asset or liability), values
-that are **time-stamped and sourced**, **money that is never a float**, identifiers
-**reused from ISO standards** rather than invented, and **forward-compatibility** so
-unknown fields and kinds are preserved, never rejected.
+One generic entity, the `Holding`, covers every asset and liability. Each value is
+time-stamped and names its source. Money is never a float. Identifiers come from ISO
+standards instead of new inventions. Unknown fields and kinds are preserved, never
+rejected, so a document stays readable by tools older than it.
 
 ## The format at a glance
 
@@ -47,10 +47,11 @@ unknown fields and kinds are preserved, never rejected.
 }
 ```
 
-- **Specification:** [`versions/0.5.0.md`](versions/0.5.0.md) - the normative document
-  (previous versions stay in [`versions/`](versions/)).
-- **JSON Schema:** [`schema/0.5.0/asset-notation.schema.json`](schema/0.5.0/asset-notation.schema.json).
-- **Examples:** [`examples/`](examples/) - a minimal document, a full household, a
+- [`versions/0.5.0.md`](versions/0.5.0.md) is the normative specification. Previous
+  versions stay in [`versions/`](versions/).
+- [`schema/0.5.0/asset-notation.schema.json`](schema/0.5.0/asset-notation.schema.json)
+  is the JSON Schema.
+- [`examples/`](examples/) holds a minimal document, a full household, and a
   multi-currency brokerage with paired trade legs and a stock split.
 
 ## Validate a document
@@ -64,21 +65,21 @@ npm run lint:md     # lint the specification prose
 npm run check       # both
 ```
 
-To validate your own document, drop it in `examples/` (or point your own ajv setup at
-`schema/0.5.0/asset-notation.schema.json`, JSON Schema draft 2020-12). Examples are
-validated against the schema matching the version each document declares; on top of
-the schema, the validator flags duplicate ids and unresolved references.
+To validate your own document, drop it in `examples/`, or point your own ajv setup at
+`schema/0.5.0/asset-notation.schema.json` (JSON Schema draft 2020-12). Each example is
+checked against the schema of the version it declares. On top of the schema, the
+validator flags duplicate ids and unresolved references.
 
 ## Test an implementation
 
 [`tests/conformance/0.5.0.json`](tests/conformance/0.5.0.json) is a language-neutral
-corpus for anyone writing a parser or validator: 59 whole documents, each with the
+corpus for anyone writing a parser or validator. It holds 59 whole documents, each with the
 verdict a conformant validator must reach and the section of the specification that
-decides it. The valid ones exercise what a consumer must tolerate (unknown kinds and
-fields, dangling references under partial disclosure, a corporate action with no
-amount, masked account numbers); the invalid ones what it must refuse (a float or a
-formatted amount, a lower-case currency, an extra key in a money object, a share above
-one, a duplicate id). Each invalid case names, in `expect`, the JSON Pointer where the
+decides it. The valid cases cover what a consumer must tolerate, such as unknown kinds
+and fields, dangling references under partial disclosure, a corporate action with no
+amount, or masked account numbers. The invalid cases cover what it must refuse, such as
+a float or a formatted amount, a lower-case currency, an extra key in a money object, a
+share above one, or a duplicate id. Each invalid case names, in `expect`, the JSON Pointer where the
 error belongs, so it cannot pass by failing for an unrelated reason. Load the file,
 validate each `document`, compare with `valid`. `npm run validate` runs it against
 the reference schema.
